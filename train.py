@@ -4,7 +4,8 @@ from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
 import time, datetime
-
+from data.load_data import load_dataset
+from model.Unet import Unet
 
 
 class Training():
@@ -131,4 +132,11 @@ class Training():
             self.generate_and_save_images(epoch, self.rd_vec)
             # we reset the keras metrics to zero
             train_loss.reset_states()
-            test_loss.reset_states()
+            test_loss.reset_state
+            
+
+if __name__ == "__main__":
+    filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
+    batch_size = 1
+    ds = load_data(filename, batch_size)
+    model = Unet(11, (240, 320))

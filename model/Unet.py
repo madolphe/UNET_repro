@@ -14,18 +14,18 @@ class Unet():
     def create_weights(shape):
         """
         """
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
+        return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
 
 
     def create_biases(size):
         """
         """
-    return tf.Variable(tf.constant(0.05, shape=[size]))
+        return tf.Variable(tf.constant(0.05, shape=[size]))
 
     def pool_layer(input, padding='SAME'):
         """
         """
-    return tf.nn.max_pool(value=input,
+        return tf.nn.max_pool(value=input,
                           ksize = [1, 2, 2, 1],
                           strides=[1, 2, 2, 1],
                           padding=padding)
@@ -47,7 +47,7 @@ class Unet():
 
         if relu:
             layer = tf.nn.relu(layer)
-    return layer
+        return layer
 
     def conv_layer(input, num_input_channels, conv_filter_size, num_filters, padding='SAME', relu=True):
         """
@@ -103,6 +103,5 @@ class Unet():
         conv22 = conv_layer(conv21, 64, 3, 64)
         conv23 = conv_layer(conv22, 64, 1, self.output_classes)
 
-    return conv23
-
+        return conv23
 
