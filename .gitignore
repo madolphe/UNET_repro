@@ -134,3 +134,4 @@ dmypy.json
 .vscode/
 data/.DS_Store
 data/images.tfrecords
+.idea/

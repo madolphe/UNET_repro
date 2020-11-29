@@ -31,6 +31,7 @@ class Training():
     def compute_loss(self, batch):
         """
         """
+        loss = 0
         return loss
 
     @tf.function
@@ -49,7 +50,6 @@ class Training():
         # apply the processed gradients on each trainable variables of the model
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         return loss
-
 
     def train(self, train_dataset, test_dataset, epochs, rd_vec):
         """
@@ -138,5 +138,5 @@ class Training():
 if __name__ == "__main__":
     filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
     batch_size = 1
-    ds = load_data(filename, batch_size)
+    ds = load_dataset(filename, batch_size)
     model = Unet(11, (240, 320))
