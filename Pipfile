@@ -9,6 +9,7 @@ verify_ssl = true
 tensorflow-probability = "*"
 tensorflow-datasets = "*"
 tensorflow = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.8"

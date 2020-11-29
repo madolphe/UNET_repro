@@ -130,3 +130,7 @@ dmypy.json
 
 # Project: 
 /multi-object-datasets
+.DS_Store
+.vscode/
+data/.DS_Store
+data/images.tfrecords
