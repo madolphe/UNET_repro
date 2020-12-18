@@ -16,14 +16,3 @@ def load_dataset(filename, batch_size):
     batched_dataset = ds.batch(batch_size)
     iterator = tf.compat.v1.data.make_one_shot_iterator(batched_dataset)
     return iterator
-
-
-if __name__ == "__main__":
-    iterator = load_dataset(filename, 5)
-    mask = next(iterator)["mask"]
-    plt.imshow(mask[0,0,:,:,0])
-    plt.show()
-    plt.imshow(mask[0,1,:,:,0])
-    plt.show()
-    plt.imshow(mask[0,2,:,:,0])
-    plt.show()

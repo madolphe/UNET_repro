@@ -1,11 +1,14 @@
 
 import tensorflow as tf
 from tensorflow import keras
+
+from tensorflow.keras import Input
 import numpy as np
 import matplotlib.pyplot as plt
 import time, datetime
 from data.load_data import load_dataset
 from model.Unet import Unet
+#from modelv2.Unetv2 import Unet
 
 
 class Training():
@@ -142,14 +145,18 @@ class Training():
 
 if __name__ == "__main__":
     filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
+    img_size = (240, 1240, 1)
+    input_img = Input(shape=img_size, name='input_image')
+    input_scope = Input(shape=img_size, name='input_scope')
+    input_net = tf.concat((input_img, input_scope), axis=3)
+
     batch_size = 1
-    img_size = 240
     num_classes = 11
     ds = load_dataset(filename, batch_size)
     batch = next(iter(ds))
-    unet = Unet(num_classes, img_size, batch_size)
-    pred = unet.model(batch)
-    print(pred.shape)
+    unet = Unet(num_classes, img_size, batch_size, input_img, input_scope)
+    model = unet.create_unet()
+ #   print(pred.shape)
 
     #epoch = 30
     #optimizer = tf.keras.optimizers.SGD(1e-3, 0.99)
