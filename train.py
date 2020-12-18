@@ -11,7 +11,7 @@ from model.Unet import Unet
 class Training():
     """
     """
-    def __init__(self, model, optimizer, batch_size, rd_vec, batch_max_train, batch_max_test):
+    def __init__(self, model, optimizer, batch_size, batch_max_train, batch_max_test, num_classes):
         """
         model : instance of the class "variationalAutoEncoder"
         optimizer : Adam optimizer to perform sgd
@@ -20,22 +20,27 @@ class Training():
         batch_max_train : number of batch in the train_dataset for one epoch
         batch_max_test : number of batch in the test_dataset for one epoch
         """
-        self.model = model
+        self.num_classes = num_classes
+        self.model = model.create_unet()
         self.optimizer = optimizer
         self.batch_size = batch_size
-        self.rd_vec = rd_vec
         self.batch_max_train = batch_max_train
         self.batch_max_test = batch_max_test
 
     @tf.function
-    def compute_loss(self, batch):
+    def compute_loss(self, batch, mask):
         """
         """
-        loss = 0
+        logits = tf.reshape(batch, (-1, self.num_classes))
+        print(logits.shape)
+        mask=tf.reshape(mask, [-1])
+        print(mask.shape)
+        tf.nn.sparse_softmax_cross_entropy_with_logits(logits,mask)
+        loss=tf.reduce_mean(cross_entropy)
         return loss
 
     @tf.function
-    def compute_apply_gradients(self, batch):
+    def compute_apply_gradients(self, batch, mask):
         """
         Implements a training loop using eager mode. It records
         operations for automatic differenciation using SGD. 
@@ -44,14 +49,14 @@ class Training():
         # records the operations to calcul the loss into the "tape" object
         with tf.GradientTape() as tape:
             # computes the loss for a batch
-            loss = self.compute_loss(batch)
+            loss = self.compute_loss(batch, mask)
         # Computes the derivative of the loss with respect of each trainable variables
         gradients = tape.gradient(loss, self.model.trainable_variables)
         # apply the processed gradients on each trainable variables of the model
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         return loss
 
-    def train(self, train_dataset, test_dataset, epochs, rd_vec):
+    def train(self, train_dataset, test_dataset, epochs):
         """
         Trains the model for each epoch 
         train_dataset : dataset for training the model
@@ -85,7 +90,7 @@ class Training():
             # loop on each batch contained in training set
             for train_batch in train_dataset:
                 # computing the loss and applying SGD on the batch selected
-                loss_train = self.compute_apply_gradients(train_batch[0])
+                loss_train = self.compute_apply_gradients(self.model(train_batch['image']), mask)
                 i+=1
                 # adding the loss on the keras metric 
                 train_loss.update_state(loss_train)
@@ -138,5 +143,20 @@ class Training():
 if __name__ == "__main__":
     filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
     batch_size = 1
+    img_size = 240
+    num_classes = 11
     ds = load_dataset(filename, batch_size)
-    model = Unet(11, (240, 320))
+    batch = next(iter(ds))
+    unet = Unet(num_classes, img_size, batch_size)
+    pred = unet.model(batch)
+    print(pred.shape)
+
+    #epoch = 30
+    #optimizer = tf.keras.optimizers.SGD(1e-3, 0.99)
+    #train_size = 12
+    #test_size = 12
+    #batch_max_train = np.array(tf.floor(train_size/batch_size))
+    #batch_max_test = np.array(tf.math.ceil(test_size/batch_size))
+    #training = Training(unet, optimizer, batch_size, batch_max_train, batch_max_test,11)
+    #training.train(ds, ds, 2)
+

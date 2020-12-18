@@ -3,22 +3,13 @@ import tensorflow_datasets as tfd
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from .decode_data import dataset
+from .decode_data import *
 from tensorflow.compat.v1.data import make_one_shot_iterator
 
 filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
 batch_size = 5
 
-#t = dataset(filename)
-#batched_dataset = dataset.batch(batch_size)
-#iterator = tf.compat.v1.data.make_one_shot_iterator(batched_dataset)
-#data = iterator.get_next()
-#img = np.array(data['image'][0])
-#mask = np.array(data['mask'][0, 0, :, :])
-#plt.imshow(img)
-#plt.show()
-#plt.imshow(mask)
-#plt.show()
+
 
 def load_dataset(filename, batch_size):
     ds = dataset(filename)
@@ -27,5 +18,12 @@ def load_dataset(filename, batch_size):
     return iterator
 
 
-if __name__ == '__main__':
-    pass
+if __name__ == "__main__":
+    iterator = load_dataset(filename, 5)
+    mask = next(iterator)["mask"]
+    plt.imshow(mask[0,0,:,:,0])
+    plt.show()
+    plt.imshow(mask[0,1,:,:,0])
+    plt.show()
+    plt.imshow(mask[0,2,:,:,0])
+    plt.show()

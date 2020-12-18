@@ -30,16 +30,16 @@ BYTE_FEATURES = ['mask', 'image', 'color', 'material', 'shape', 'size']
 features = {
     'image': tf.io.FixedLenFeature(IMAGE_SIZE+[3], tf.string),
     'mask': tf.io.FixedLenFeature([MAX_NUM_ENTITIES]+IMAGE_SIZE+[1], tf.string),
-   # 'x': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
-   # 'y': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
-   # 'z': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
+    'x': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
+    'y': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
+    'z': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
     'pixel_coords': tf.io.FixedLenFeature([MAX_NUM_ENTITIES, 3], tf.float32),
     'rotation': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
     'size': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.string),
     'material': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.string),
     'shape': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.string),
     'color': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.string),
-    #'visibility': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
+    'visibility': tf.io.FixedLenFeature([MAX_NUM_ENTITIES], tf.float32),
 }
 
 
@@ -49,6 +49,10 @@ def _decode(example_proto):
   for k in BYTE_FEATURES:
     single_example[k] = tf.squeeze(tf.io.decode_raw(single_example[k], tf.uint8),
                                    axis=-1)
+  cast_img = tf.cast(single_example['image'], tf.float32)
+  single_example["image"] = cast_img[:240, :240,:]
+  mask = tf.cast(single_example['mask'], tf.float32)
+  single_example['mask'] = mask[:,:240, :240,:]
   return single_example
 
 
@@ -67,3 +71,4 @@ def dataset(tfrecords_path, read_buffer_size=None, map_parallel_calls=None):
       tfrecords_path, compression_type=COMPRESSION_TYPE,
       buffer_size=read_buffer_size)
   return raw_dataset.map(_decode, num_parallel_calls=map_parallel_calls)
+
