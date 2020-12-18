@@ -155,7 +155,6 @@ if __name__ == "__main__":
     ds = load_dataset(filename, batch_size)
     batch = next(iter(ds))
     unet = Unet(num_classes, img_size, batch_size, input_img, input_scope)
-    model = unet.create_unet()
  #   print(pred.shape)
 
     #epoch = 30
