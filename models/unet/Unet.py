@@ -4,17 +4,15 @@ import numpy as np
 from operator import floordiv 
 
 
-
 class Unet(tf.keras.Model):
     def __init__(self, output_classes, img_size, batch_size, input_shape):
         super().__init__()
-        
         self.output_classes = output_classes
         self.img_size = img_size
         self.batch_size = batch_size
         self.create_unet(input_shape)
 
-    def call(self, x, training=False):
+    def __call__(self, x, training=False):
         
         x = self.conv1(x)
         x_2 = self.conv2(x)
@@ -44,7 +42,7 @@ class Unet(tf.keras.Model):
         x = self.conv15(merge_14)
         x = self.conv16(x)
         #
-        x = self.conv17(x)
+        x_17 = self.conv17(x)
         merge_17 = tf.concat([x_4, x_17], axis=-1)
         x = self.conv18(merge_17)
         x = self.conv19(x)
@@ -55,7 +53,6 @@ class Unet(tf.keras.Model):
         x = self.conv22(x)
         x = self.conv23(x)
         return x
-
 
     def pool_layer(self, input, padding='SAME'):
         """
@@ -68,9 +65,9 @@ class Unet(tf.keras.Model):
         """
         init_biases = tf.keras.initializers.Constant(value=0.05)
         init_weights = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.05)
-        layer = tf.keras.layers.Conv2DTranspose( num_filters, conv_filter_size, strides=[1, 2, 2, 1], padding=padding, output_padding=None,
-        kernel_initializer=init_weights, bias_initializer=init_biases)
-    
+        layer = tf.keras.layers.Conv2DTranspose(num_filters, conv_filter_size, strides=[1, 2, 2, 1], padding=padding,
+                                                output_padding=None, kernel_initializer=init_weights,
+                                                bias_initializer=init_biases)
 #        layer = tf.nn.conv2d_transpose(input, filters=weights, output_shape=[batch_size_0, feature_map_size,
 #                                                                                  feature_map_size, num_filters],
 #                                       strides=[1, 2, 2, 1], padding=padding)
@@ -83,9 +80,9 @@ class Unet(tf.keras.Model):
         """
         init_biases = tf.keras.initializers.Constant(value=0.05)
         init_weights = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.05)
-        layer = tf.keras.layers.Conv2D( num_filters, conv_filter_size, strides=[1, 1, 1, 1], padding=padding,
-                                activation=None, use_bias=True,
-                                kernel_initializer=init_weights, bias_initializer=init_biases)
+        layer = tf.keras.layers.Conv2D(num_filters, conv_filter_size, strides=[1, 1, 1, 1], padding=padding,
+                                       activation=None, use_bias=True, kernel_initializer=init_weights,
+                                       bias_initializer=init_biases)
         if relu:
             layer = tf.keras.layers.ReLU(layer)
         return layer
@@ -98,22 +95,22 @@ class Unet(tf.keras.Model):
         self.pool2 = self.pool_layer()
         #
         self.conv3 = self.conv_layer(64, 3, 128)
-        self.conv4 = self.conv_layer( 128, 3, 128)
+        self.conv4 = self.conv_layer(128, 3, 128)
         self.pool4 = self.pool_layer()
         #
-        self.conv5 = self.conv_layer( 128, 3, 256)
-        self.conv6 = self.conv_layer( 256, 3, 256)
+        self.conv5 = self.conv_layer(128, 3, 256)
+        self.conv6 = self.conv_layer(256, 3, 256)
         self.pool6 = self.pool_layer()
         #
-        self.conv7 = self.conv_layer( 256, 3, 512)
-        self.conv8 = self.conv_layer( 512, 3, 512)
+        self.conv7 = self.conv_layer(256, 3, 512)
+        self.conv8 = self.conv_layer(512, 3, 512)
         self.pool8 = self.pool_layer()
         #
-        self.conv9 = self.conv_layer( 512, 3, 1024)
-        self.conv10 = self.conv_layer( 1024, 3, 1024)
+        self.conv9 = self.conv_layer(512, 3, 1024)
+        self.conv10 = self.conv_layer(1024, 3, 1024)
         #
         # self.conv11 = self.un_conv(, 1024, 2, 512, self.img_size // 8 , train)
-        self.conv11 = self.un_conv( 1024, 2, 512)
+        self.conv11 = self.un_conv(1024, 2, 512)
         
         self.conv12 = self.conv_layer(1024, 3, 512)
         self.conv13 = self.conv_layer(512, 3, 512)
@@ -135,5 +132,3 @@ class Unet(tf.keras.Model):
         self.conv21 = self.conv_layer(128, 3, 64)
         self.conv22 = self.conv_layer(64, 3, 64)
         self.conv23 = self.conv_layer(64, 1, self.output_classes, relu=False)
-
-

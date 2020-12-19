@@ -44,31 +44,31 @@ features = {
 
 
 def _decode(example_proto):
-  # Parse the input `tf.Example` proto using the feature description dict above.
-  single_example = tf.io.parse_single_example(example_proto, features)
-  for k in BYTE_FEATURES:
-    single_example[k] = tf.squeeze(tf.io.decode_raw(single_example[k], tf.uint8),
-                                   axis=-1)
-  cast_img = tf.cast(single_example['image'], tf.float32)
-  single_example["image"] = cast_img[:240, :240,:]
-  mask = tf.cast(single_example['mask'], tf.float32)
-  single_example['mask'] = mask[:,:240, :240,:]
-  return single_example
+    # Parse the input `tf.Example` proto using the feature description dict above.
+    single_example = tf.io.parse_single_example(example_proto, features)
+    for k in BYTE_FEATURES:
+        single_example[k] = tf.squeeze(tf.io.decode_raw(single_example[k], tf.uint8),
+                                       axis=-1)
+    cast_img = tf.cast(single_example['image'], tf.float32)
+    single_example["image"] = cast_img[:240, :240, :]
+    mask = tf.cast(single_example['mask'], tf.float32)
+    single_example['mask'] = mask[:, :240, :240, :]
+    return single_example
 
 
 def dataset(tfrecords_path, read_buffer_size=None, map_parallel_calls=None):
-  """Read, decompress, and parse the TFRecords file.
-  Args:
+    """ Read, decompress, and parse the TFRecords file.
+    Args:
     tfrecords_path: str. Path to the dataset file.
     read_buffer_size: int. Number of bytes in the read buffer. See documentation
       for `tf.data.TFRecordDataset.__init__`.
     map_parallel_calls: int. Number of elements decoded asynchronously in
       parallel. See documentation for `tf.data.Dataset.map`.
-  Returns:
+    Returns:
     An unbatched `tf.data.TFRecordDataset`.
-  """
-  raw_dataset = tf.data.TFRecordDataset(
+    """
+    raw_dataset = tf.data.TFRecordDataset(
       tfrecords_path, compression_type=COMPRESSION_TYPE,
       buffer_size=read_buffer_size)
-  return raw_dataset.map(_decode, num_parallel_calls=map_parallel_calls)
+    return raw_dataset.map(_decode, num_parallel_calls=map_parallel_calls)
 

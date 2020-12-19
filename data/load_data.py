@@ -1,14 +1,8 @@
-import tensorflow as tf
-import tensorflow_datasets as tfd
-import matplotlib.pyplot as plt
-import numpy as np
-import sys
 from .decode_data import *
-from tensorflow.compat.v1.data import make_one_shot_iterator
 
+# @TODO: relative path would be better:
 filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
 batch_size = 5
-
 
 
 def load_dataset(filename, batch_size):
