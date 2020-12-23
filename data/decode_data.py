@@ -52,7 +52,7 @@ def _decode(example_proto):
     cast_img = tf.cast(single_example['image'], tf.float32)
     single_example["image"] = cast_img[:240, :240, :]
     mask = tf.cast(single_example['mask'], tf.float32)
-    single_example['mask'] = mask[:, :240, :240, :]
+    single_example['mask'] = tf.cast(mask[0, :240, :240, :]/255, tf.int32)
     return single_example
 
 

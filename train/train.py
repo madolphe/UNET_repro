@@ -15,7 +15,7 @@ class Training:
         batch_max_test : number of batch in the test_dataset for one epoch
         """
         self.num_classes = num_classes
-        self.model = model.create_unet
+        self.model = model
         self.optimizer = optimizer
         self.batch_size = batch_size
         self.batch_max_train = batch_max_train
@@ -25,12 +25,17 @@ class Training:
     def compute_loss(self, batch, mask):
         """
         """
-        logits = tf.reshape(batch, (-1, self.num_classes))
-        print(logits.shape)
-        mask = tf.reshape(mask, [-1])
-        print(mask.shape)
-        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, mask)
+        output = self.model(batch)
+        logits = tf.reshape(output, (-1, self.num_classes))
+        #print("logits", logits.shape)
+        labels = tf.reshape(mask, [-1])
+
+        #print("mask shae cross entropie", mask.shape)
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
+        print("cross entropie : ",cross_entropy)
+        # @TODO: visualize this cross_entropy loss matrix
         loss = tf.reduce_mean(cross_entropy)
+        print("mean cross entropie  : ",loss)
         return loss
 
     @tf.function
@@ -87,7 +92,8 @@ class Training:
             # loop on each batch contained in training set
             for train_batch in train_dataset:
                 # computing the loss and applying SGD on the batch selected
-                loss_train = self.compute_apply_gradients(self.model(train_batch['image']), mask)
+                # print("train batch shape", train_batch['mask'][:,0,:,:,:].shape)
+                loss_train = self.compute_apply_gradients(train_batch['image'], train_batch['mask'])
                 i += 1
                 # adding the loss on the keras metric 
                 train_loss.update_state(loss_train)
@@ -104,7 +110,7 @@ class Training:
             # loop on each batch of testing set
             for test_batch in test_dataset:
                 # computing the loss without applying SGD
-                loss_test = self.compute_loss(test_batch[0])
+                loss_test = self.compute_loss(test_batch['image'], test_batch['mask'])
                 j += 1
                 # adding the loss on the keras metric
                 test_loss.update_state(loss_test)
