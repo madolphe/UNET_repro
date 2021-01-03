@@ -10,12 +10,8 @@ import numpy as np
 class Unet:
     def __init__(self, input_size):
         self.input_img = Input(shape=input_size)
-        # self.input_scope = Input(shape=input_size, name='input_scope')
-        # self.input_net = tf.concat((self.input_img, self.input_scope), axis=3)
         self.w_init = TruncatedNormal
-        # self.model = Model([self.input_img, self.input_scope], self.create_unet)
         self.model = Model(self.input_img, self.create_unet())
-        # self.model.summary()
 
     def down_block(self, prev_layer, filters, downsample=True):
         conv = Conv2D(filters, (3, 3), strides=1, padding='same',
@@ -41,7 +37,6 @@ class Unet:
         else:
             return acti
 
-#    @property
     def create_unet(self):
         d1, s1 = self.down_block(self.input_img, 64)
         d2, s2 = self.down_block(d1, 128)

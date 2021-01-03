@@ -11,7 +11,7 @@ if __name__ == "__main__":
     filename = '/Users/jouffroy/Desktop/thèse/UNET_repro/data/images.tfrecords'
     img_size = (240, 240, 3)
 
-    batch_size = 1
+    batch_size = 32
     num_classes = 2
     epoch = 30
     train_size = 12
@@ -22,9 +22,6 @@ if __name__ == "__main__":
     ds = load_dataset(filename, batch_size)
     unet = Unet(img_size)
     optimizer = tf.keras.optimizers.SGD(1e-3, 0.99)    
-
-    # sc = Sanity_Check(ds=ds, model=unet.model, training='osef')
-    # sc.check_output_model()
     
     training = Training(unet.model, optimizer, batch_size, batch_max_train, batch_max_test, num_classes)
     training.train(ds, ds, epoch)
