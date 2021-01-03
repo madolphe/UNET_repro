@@ -13,16 +13,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import time, datetime
-
+from models.modelv2.Unetv2 import Unet
 
 tfd = tfp.distributions
-
 
 class Training():
     """
     This class computes the training for the variational autoencoder
     """
-    def __init__(self, model, optimizer, batch_size, rd_vec, batch_max_train, batch_max_test):
+    def __init__(self, vae, unet, optimizer, batch_size, rd_vec, batch_max_train, batch_max_test, K, gamma):
         """
         model : instance of the class "variationalAutoEncoder"
         optimizer : Adam optimizer to perform sgd
@@ -31,47 +30,50 @@ class Training():
         batch_max_train : number of batch in the train_dataset for one epoch
         batch_max_test : number of batch in the test_dataset for one epoch
         """
-        self.model = model
+        self.vae = vae
+        self.unet = unet
+        self.K = K
         self.optimizer = optimizer
         self.batch_size = batch_size
         self.rd_vec = rd_vec
         self.batch_max_train = batch_max_train
         self.batch_max_test = batch_max_test
+        self.gamma = gamma 
 
     @tf.function
     def compute_loss(self, batch):
         """
-        Computes the mean of the ELBO loss for one batch of images
-
         batch : batch of images on which we compute the loss
         """
-        # returns a density probability of a multivariate density
-        # using the output of the encoder for parameters
-        # approx_posterior = p(z|x)
-        approx_posterior = self.model.encoder(batch)
-        # sample this distribution by a number of batches
-        # tensorflow probability samples by using the "parametrization trick"
-        approx_posterior_sample = approx_posterior.sample()
-        # returns a density of probability of independant normal density
-        # using the ouput of the decoder for parmeters
-        # decoder_likelihood = p(x|z)
-        decoder_likelihood = self.model.decoder(approx_posterior_sample)
-        # returns the negative log likelihood 
-        # -E[log(p(x|z))]
-        distortion = -decoder_likelihood.log_prob(batch)
-        # returns the prior p(z) following a normal distribution
-        # of paramters (0,1).
+        for k in range(K):
+            scope = tf.ones()
+            decoder_likelihoods = []
+            approx_posteriors = []
+            if (k == K-1):
+                # dans le cas où c'est le dernier K, on ne rentre pas dans
+                # unet, mais le mask est égal au dernier scope, ce qui permet
+                # de traiter toute l'image
+                mask = scope
+            else: 
+                # dans le reste des cas, on retrouve bien le mask et le scope
+                # grâce au réseau attentionnel
+                first_mask = self.unet(tf.concat([batch, scope], axis=1))
+                mask = scope * first_mask
+                scope = tf.math.log(scope * (1-first_mask))
+            # approx_posterior = p(z|x)
+            approx_posterior = self.model.encoder(tf.concat([batch, mask], axis=1))
+            approx_posteriors.append(approx_posterior)
+            approx_posterior_sample = approx_posterior.sample()
+            # decoder_likelihood = p(x|z)
+            decoder_likelihood = mask * self.model.decoder(approx_posterior_sample)
+            decoder_likelihoods.append(decoder_likelihood)        
+        summed_likelihood = tf.reduce_sum(decoder_likelihoods)
+        distortion = -tf.math.log(summed_likelihood)
+        factorised_posteriors = tf.reduce_prod(approx_posteriors)
         latent_prior = self.model.make_mixture_prior()
-        # returns the kl divergence 
-        # rate = KL[p(z|x)||p(x)]
-        rate = tfd.kl_divergence(approx_posterior, latent_prior)
-        # returns the elbo loss for each batch, using beta
-        # elbo_local  = -E[log(p(x|z))] + (beta * KL[p(z|x) || p(z)])
-        elbo_local = -(distortion + self.model.beta * rate)
-        # returns the mean of the elbo of each batch
-        elbo = tf.reduce_mean(input_tensor=elbo_local)
-        # We need to maximise the elbo, so the loss is minus the elbo
-        loss = -elbo
+        rate_img = self.model.beta * tfd.kl_divergence(factorised_posteriors, latent_prior)
+        rate_mask = self.gamma * tfd.kl_divergence(mask, latent_prior)
+        loss = distortion + rate_img + rate_mask
         return loss
 
     @tf.function

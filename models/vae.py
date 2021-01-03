@@ -34,26 +34,23 @@ class VariationalAutoEncoder(tf.keras.Model):
     self.latent_size = latent_size
     self.beta = beta
     self.output_shape_img=output_shape_img 
+    self.w_init = GlorotNormal
 
-    self.generative_net = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(
-            filters=12, kernel_size=3, strides=1, activation='relu', padding='same'),
-        tf.keras.layers.Conv2D(
-            filters=64, kernel_size=3, strides=1, activation='relu',padding='same'),
-        tf.keras.layers.Conv2D(
-            self.output_shape_img[-1],kernel_size=1, strides=1, activation=None,padding='same'),
-    ])
     self.inference_net = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(
-            filters=32, kernel_size=3, strides=2, activation='relu',padding='same'),
-        tf.keras.layers.Conv2D(
-            filters=32, kernel_size=3, strides=2, activation='relu',padding='same'),
-        tf.keras.layers.Conv2D(
-            filters=64, kernel_size=3, strides=2, activation='relu',padding='same'),
-        tf.keras.layers.Conv2D(
-            filters=64, kernel_size=3, strides=2, activation='relu',padding='same'),
+        tf.keras.layers.Conv2D(32, (3, 3), strides=2, padding='same', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(32, (3, 3), strides=2, padding='same', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(64, (3, 3), strides=2, padding='same', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(64, (3, 3), strides=2, padding='same', activation='relu', kernel_initializer=self.w_init),
         tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(2*self.latent_size),
+        tf.keras.layers.Dense(2*self.latent_size, kernel_initializer=self.w_init)
+    ])
+    
+    self.generative_net = tf.keras.Sequential([
+        tf.keras.layers.Conv2D(32, (3, 3), strides=1, padding='valid', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(32, (3, 3), strides=1, padding='valid', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(32, (3, 3), strides=1, padding='valid', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(32, (3, 3), strides=1, padding='valid', activation='relu', kernel_initializer=self.w_init),
+        tf.keras.layers.Conv2D(1, (1, 1), strides=1, kernel_initializer=self.w_init, activation=None)
     ])
 
   @tf.function
@@ -106,9 +103,6 @@ class VariationalAutoEncoder(tf.keras.Model):
 
   def spatial_broadcasting(self, inputs):
     """
-    computes the spatial broadcasting of inputs
-    in order to add spatial informations for the decoder
-
     input : samples of the encoder that we want 
     to decode
     """
@@ -117,9 +111,9 @@ class VariationalAutoEncoder(tf.keras.Model):
     # getting the feature size
     feature_size = tf.shape(inputs)[1]
     # getting height and width of the image for the tiling (=128)
-    d = w = self.output_shape_img[0]
+    d = w = self.output_shape_img[0] + 8 
     # tiling inputs 
-    z_b = tf.tile(inputs, [1, d * w])
+    z_b = tf.tile(inputs, [1, d * w]) 
     # reshaping inputs to get the size of the original image
     z_b = tf.reshape(z_b, [batch_size, d, w, feature_size])
     # creating linspace of constants of size (1,1,128)
