@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+
+####
+# Maxime ADOLPHE and Emma JOUFFROY
+# cite Simon and Gabriel
+####
+
 import tensorflow as tf
 from tensorflow.keras.initializers import TruncatedNormal
 from tensorflow.keras.layers import Conv2D, Flatten, Dense, ReLU, Input
@@ -6,6 +13,7 @@ import tensorflow.keras.backend as K
 from tensorflow.keras import Model
 import numpy as np
 
+# @TODO : comment
 
 class Unet:
     def __init__(self, input_size):

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 ####
-# JOUFFROY Emma stagiaire 2020
-# https://www.tensorflow.org/tutorials/customization/custom_training_walkthrough
+# JOUFFROY Emma 
 ####
 
-
+# @TODO:  finish loss implementation, be careful of logs and output probabilities of images / mask,  
 import tensorflow as tf
 from tensorflow import keras
 import tensorflow_probability as tfp

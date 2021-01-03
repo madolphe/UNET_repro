@@ -10,6 +10,8 @@
 import tensorflow as tf
 from tensorflow import keras
 import tensorflow_probability as tfp
+from tensorflow.keras.initializers import TruncatedNormal, GlorotNormal
+
 tfd = tfp.distributions
 
 class VariationalAutoEncoder(tf.keras.Model):
@@ -53,6 +55,7 @@ class VariationalAutoEncoder(tf.keras.Model):
         tf.keras.layers.Conv2D(1, (1, 1), strides=1, kernel_initializer=self.w_init, activation=None)
     ])
 
+
   @tf.function
   def _softplus_inverse(self, x):
     """
@@ -67,7 +70,7 @@ class VariationalAutoEncoder(tf.keras.Model):
 
     batch : batch of images to pass through the model, without learning
     """
-    latent = self.encoder(eps)
+    latent = self.encoder(batch)
     latent_sample = latent.sample()
     return self.decoder(latent_sample)
 
@@ -103,6 +106,9 @@ class VariationalAutoEncoder(tf.keras.Model):
 
   def spatial_broadcasting(self, inputs):
     """
+    computes the spatial broadcasting of inputs
+    in order to add spatial informations for the decoder
+
     input : samples of the encoder that we want 
     to decode
     """
@@ -139,10 +145,13 @@ class VariationalAutoEncoder(tf.keras.Model):
 
     codes: sample from the encoder's output that we want to decode
     """
+    print("latent before broadcast :", tf.shape(codes))
     # we apply the spatial broadcasting to the input
     codes =  self.spatial_broadcasting(codes)
+    print("latent after broadcast :", tf.shape(codes))
     # we apply the generative_net to the ouput of the spatial broadcasting 
     logits = self.generative_net(codes)
+    print("output decoder before bernoulli :", tf.shape(logits))
     # return an independant normal distribution for each pixel of each images
     # with parameters : mean = logits and scale = 0.2
     return tfd.Independent(
